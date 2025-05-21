@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { VeilleList } from "./components/VeilleList";
 import { VeilleDetail } from "./components/VeilleDetail";
-import { AnalyseDashboard } from "./components/analyse";
+import AnalysePage from "./pages/Analyse";
 
 export default function App() {
   const [selectedVeille, setSelectedVeille] = useState<any>(null);
@@ -34,7 +34,7 @@ export default function App() {
             <VeilleList onSelectVeille={setSelectedVeille} />
           )
         )}
-        {tab === "analyse" && <AnalyseDashboard />}
+        {tab === "analyse" && <AnalysePage />}
       </main>
     </div>
   );

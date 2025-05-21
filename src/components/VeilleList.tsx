@@ -3,14 +3,7 @@ import { Plus, Trash2, Edit, FolderKanban, Globe } from "lucide-react";
 import { getDB } from "../utils/db";
 import { v4 as uuidv4 } from "uuid";
 import { SourceResearch } from "./SourceResearch";
-
-type Veille = {
-  id: string;
-  name: string;
-  keywords: string[];
-  sentiments: string[];
-  createdAt: number;
-};
+import { Veille, isValidVeille } from "../utils/types";
 
 export function VeilleList({ onSelectVeille }: { onSelectVeille: (veille: Veille) => void }) {
   const [veilles, setVeilles] = useState<Veille[]>([]);
@@ -26,7 +19,10 @@ export function VeilleList({ onSelectVeille }: { onSelectVeille: (veille: Veille
   async function loadVeilles() {
     const db = await getDB();
     const all = await db.getAll("veilles");
-    setVeilles(all.sort((a, b) => b.createdAt - a.createdAt));
+    // Defensive: filter only valid Veille objects
+    setVeilles(
+      all.filter(isValidVeille).sort((a, b) => b.createdAt - a.createdAt)
+    );
   }
 
   async function handleDelete(id: string) {
@@ -102,54 +98,55 @@ export function VeilleList({ onSelectVeille }: { onSelectVeille: (veille: Veille
         <SourceResearch veille={selectedVeille} onSourcesAdded={handleSourcesAdded} />
       ) : (
         <ul className="space-y-3">
-          {veilles.length === 0 && (
+          {veilles.length === 0 ? (
             <li className="text-slate-500 italic">Aucune veille créée pour l’instant.</li>
-          )}
-          {veilles.map((v) => (
-            <li
-              key={v.id}
-              className="bg-white rounded shadow flex flex-col md:flex-row md:items-center justify-between p-4 gap-2"
-            >
-              <div>
-                <div className="font-semibold text-slate-800">{v.name}</div>
-                <div className="text-xs text-slate-500">
-                  Mots-clés: {v.keywords.join(", ") || <span className="italic">aucun</span>}
-                  <br />
-                  Sentiments: {v.sentiments.join(", ") || <span className="italic">aucun</span>}
+          ) : (
+            veilles.map((v) => (
+              <li
+                key={v.id}
+                className="bg-white rounded shadow flex flex-col md:flex-row md:items-center justify-between p-4 gap-2"
+              >
+                <div>
+                  <div className="font-semibold text-slate-800">{v.name}</div>
+                  <div className="text-xs text-slate-500">
+                    Mots-clés: {v.keywords.join(", ") || <span className="italic">aucun</span>}
+                    <br />
+                    Sentiments: {v.sentiments.join(", ") || <span className="italic">aucun</span>}
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2 mt-2 md:mt-0">
-                <button
-                  className="p-2 rounded hover:bg-blue-100"
-                  title="Sources"
-                  onClick={() => handleSourceResearch(v)}
-                >
-                  <Globe className="w-4 h-4 text-blue-600" />
-                </button>
-                <button
-                  className="p-2 rounded hover:bg-blue-100"
-                  title="Détail"
-                  onClick={() => handleGoToDetail(v)}
-                >
-                  <FolderKanban className="w-4 h-4 text-blue-600" />
-                </button>
-                <button
-                  className="p-2 rounded hover:bg-blue-100"
-                  title="Modifier"
-                  onClick={() => handleEdit(v)}
-                >
-                  <Edit className="w-4 h-4 text-blue-600" />
-                </button>
-                <button
-                  className="p-2 rounded hover:bg-red-100"
-                  title="Supprimer"
-                  onClick={() => handleDelete(v.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
-            </li>
-          ))}
+                <div className="flex gap-2 mt-2 md:mt-0">
+                  <button
+                    className="p-2 rounded hover:bg-blue-100"
+                    title="Sources"
+                    onClick={() => handleSourceResearch(v)}
+                  >
+                    <Globe className="w-4 h-4 text-blue-600" />
+                  </button>
+                  <button
+                    className="p-2 rounded hover:bg-blue-100"
+                    title="Détail"
+                    onClick={() => handleGoToDetail(v)}
+                  >
+                    <FolderKanban className="w-4 h-4 text-blue-600" />
+                  </button>
+                  <button
+                    className="p-2 rounded hover:bg-blue-100"
+                    title="Modifier"
+                    onClick={() => handleEdit(v)}
+                  >
+                    <Edit className="w-4 h-4 text-blue-600" />
+                  </button>
+                  <button
+                    className="p-2 rounded hover:bg-red-100"
+                    title="Supprimer"
+                    onClick={() => handleDelete(v.id)}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </button>
+                </div>
+              </li>
+            ))
+          )}
         </ul>
       )}
     </section>

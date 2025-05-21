@@ -3,28 +3,9 @@ import { getSourceSuggestions, SourceSuggestionSchema } from "../services/openai
 import { getDB } from "../utils/db";
 import { Plus, RefreshCw, Globe, Rss, BookOpen, MessageCircle, Check, X, Loader2 } from "lucide-react";
 import { z } from "zod";
-
-type Veille = {
-  id: string;
-  name: string;
-  keywords: string[];
-  sentiments: string[];
-  createdAt: number;
-};
-
-type SourceType = "rss" | "web" | "blog" | "forum" | "manual";
+import { Veille, Source, SourceType } from "../utils/types";
 
 type SourceSuggestion = z.infer<typeof SourceSuggestionSchema>;
-
-type Source = {
-  id: string;
-  veilleId: string;
-  url: string;
-  type: SourceType;
-  addedAt: number;
-  title?: string;
-  description?: string;
-};
 
 const typeIcons: Record<SourceType, JSX.Element> = {
   rss: <Rss className="w-5 h-5 text-orange-500" />,
@@ -86,15 +67,16 @@ export function SourceResearch({ veille, onSourcesAdded }: { veille: Veille; onS
     const db = await getDB();
     const toAdd = suggestions.filter((s) => accepted.has(s.url));
     for (const s of toAdd) {
-      await db.put("sources", {
+      const source: Source = {
         id: s.url,
         veilleId: veille.id,
         url: s.url,
-        type: s.type,
+        type: s.type as SourceType,
         addedAt: Date.now(),
         title: s.title,
         description: s.description,
-      });
+      };
+      await db.put("sources", source);
     }
     onSourcesAdded();
   }
@@ -105,7 +87,7 @@ export function SourceResearch({ veille, onSourcesAdded }: { veille: Veille; onS
     setAddingManual(true);
     try {
       const db = await getDB();
-      await db.put("sources", {
+      const source: Source = {
         id: manualUrl,
         veilleId: veille.id,
         url: manualUrl,
@@ -113,7 +95,8 @@ export function SourceResearch({ veille, onSourcesAdded }: { veille: Veille; onS
         addedAt: Date.now(),
         title: manualTitle,
         description: manualDesc,
-      });
+      };
+      await db.put("sources", source);
       setManualUrl("");
       setManualTitle("");
       setManualDesc("");
@@ -141,8 +124,8 @@ export function SourceResearch({ veille, onSourcesAdded }: { veille: Veille; onS
         </button>
         <span className="text-slate-500 text-sm">Basé sur vos mots-clés et sentiments</span>
       </div>
-      {error && <div className="text-red-600 mb-2">{error}</div>}
-      {refusal && <div className="text-orange-600 mb-2">{refusal}</div>}
+      {error && (<div className="text-red-600 mb-2">{error}</div>)}
+      {refusal && (<div className="text-orange-600 mb-2">{refusal}</div>)}
       {loading && (
         <div className="flex items-center gap-2 text-blue-600 mb-4">
           <Loader2 className="w-5 h-5 animate-spin" />
@@ -163,7 +146,7 @@ export function SourceResearch({ veille, onSourcesAdded }: { veille: Veille; onS
           >
             <div>
               <div className="font-semibold text-slate-800 flex items-center gap-2">
-                {typeIcons[s.type]}
+                {typeIcons[s.type as SourceType]}
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">
                   {s.title || s.url}
                 </a>

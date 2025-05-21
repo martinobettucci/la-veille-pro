@@ -1,29 +1,51 @@
-import { Filter, Search, X } from "lucide-react";
+import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
+type FiltersType = {
+  veilleId: string | null;
+  sentiments: string[];
+  entities: string[];
+  dateFrom: string | null;
+  dateTo: string | null;
+  search: string;
+};
+
 type Props = {
-  filters: {
-    veilleId: string | null;
-    sentiment: string | null;
-    entity: string | null;
-    dateFrom: string | null;
-    dateTo: string | null;
-    search: string;
-  };
-  setFilters: (f: any) => void;
+  filters?: FiltersType; // Make optional for defensive fallback
+  setFilters: (f: FiltersType) => void;
   sentiments: string[];
   entities: string[];
   veilles: { id: string; name: string }[];
 };
 
+const DEFAULT_FILTERS: FiltersType = {
+  veilleId: null,
+  sentiments: [],
+  entities: [],
+  dateFrom: null,
+  dateTo: null,
+  search: "",
+};
+
 export function AnalyseFilters({
-  filters,
+  filters = DEFAULT_FILTERS,
   setFilters,
   sentiments,
   entities,
   veilles,
 }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showSentiments, setShowSentiments] = useState(false);
+  const [showEntities, setShowEntities] = useState(false);
+
+  // Defensive: If filters is undefined, show a warning and return null
+  if (!filters) {
+    return (
+      <div className="bg-red-100 text-red-700 p-2 rounded">
+        Erreur : les filtres ne sont pas initialisés.
+      </div>
+    );
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setFilters({ ...filters, [e.target.name]: e.target.value || null });
@@ -34,13 +56,24 @@ export function AnalyseFilters({
   }
 
   function clearFilters() {
+    setFilters({ ...DEFAULT_FILTERS });
+  }
+
+  function toggleSentiment(s: string) {
     setFilters({
-      veilleId: null,
-      sentiment: null,
-      entity: null,
-      dateFrom: null,
-      dateTo: null,
-      search: "",
+      ...filters,
+      sentiments: filters.sentiments.includes(s)
+        ? filters.sentiments.filter((x) => x !== s)
+        : [...filters.sentiments, s],
+    });
+  }
+
+  function toggleEntity(e: string) {
+    setFilters({
+      ...filters,
+      entities: filters.entities.includes(e)
+        ? filters.entities.filter((x) => x !== e)
+        : [...filters.entities, e],
     });
   }
 
@@ -77,32 +110,80 @@ export function AnalyseFilters({
             </option>
           ))}
         </select>
-        <select
-          name="sentiment"
-          value={filters.sentiment || ""}
-          onChange={handleChange}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          <option value="">Tous sentiments</option>
-          {sentiments.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <select
-          name="entity"
-          value={filters.entity || ""}
-          onChange={handleChange}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          <option value="">Toutes ENR</option>
-          {entities.map((e) => (
-            <option key={e} value={e}>
-              {e}
-            </option>
-          ))}
-        </select>
+        {/* Multi-select for sentiments */}
+        <div className="relative">
+          <button
+            type="button"
+            className="border rounded px-2 py-1 text-sm flex items-center gap-1 min-w-[120px]"
+            onClick={() => setShowSentiments((v) => !v)}
+          >
+            {filters.sentiments.length === 0
+              ? "Tous sentiments"
+              : filters.sentiments.join(", ")}
+            {showSentiments ? (
+              <ChevronUp className="w-4 h-4 ml-1" />
+            ) : (
+              <ChevronDown className="w-4 h-4 ml-1" />
+            )}
+          </button>
+          {showSentiments && (
+            <div className="absolute z-10 bg-white border rounded shadow p-2 mt-1 min-w-[160px] max-h-48 overflow-auto">
+              {sentiments.length === 0 && (
+                <div className="text-xs text-slate-400 italic">Aucun</div>
+              )}
+              {sentiments.map((s) => (
+                <label
+                  key={s}
+                  className="flex items-center gap-2 text-sm cursor-pointer py-1"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.sentiments.includes(s)}
+                    onChange={() => toggleSentiment(s)}
+                  />
+                  <span>{s}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* Multi-select for entities */}
+        <div className="relative">
+          <button
+            type="button"
+            className="border rounded px-2 py-1 text-sm flex items-center gap-1 min-w-[120px]"
+            onClick={() => setShowEntities((v) => !v)}
+          >
+            {filters.entities.length === 0
+              ? "Toutes ENR"
+              : filters.entities.join(", ")}
+            {showEntities ? (
+              <ChevronUp className="w-4 h-4 ml-1" />
+            ) : (
+              <ChevronDown className="w-4 h-4 ml-1" />
+            )}
+          </button>
+          {showEntities && (
+            <div className="absolute z-10 bg-white border rounded shadow p-2 mt-1 min-w-[160px] max-h-48 overflow-auto">
+              {entities.length === 0 && (
+                <div className="text-xs text-slate-400 italic">Aucun</div>
+              )}
+              {entities.map((e) => (
+                <label
+                  key={e}
+                  className="flex items-center gap-2 text-sm cursor-pointer py-1"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.entities.includes(e)}
+                    onChange={() => toggleEntity(e)}
+                  />
+                  <span>{e}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
         <input
           type="text"
           name="search"

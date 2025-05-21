@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "date-fns": "^3.6.0",
     "idb": "^7.1.1",
     "lucide-react": "^0.372.0",
     "openai": "^4.30.0",
@@ -16,7 +17,8 @@
     "react-dom": "^18.2.0",
     "uuid": "^11.1.0",
     "zod": "^3.25.7",
-    "date-fns": "^3.6.0"
+    "chart.js": "^4.4.2",
+    "react-chartjs-2": "^5.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.41",

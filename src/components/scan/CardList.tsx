@@ -1,19 +1,7 @@
 import { useEffect, useState } from "react";
 import { getDB } from "../../utils/db";
 import { BarChart3 } from "lucide-react";
-
-type Card = {
-  id: string;
-  veilleId: string;
-  sourceId: string;
-  title: string;
-  url: string;
-  summary: string;
-  entities: string[];
-  sentiment: string;
-  metrics: Record<string, any>;
-  createdAt: number;
-};
+import { Card, isValidCard } from "../../utils/types";
 
 export function CardList({ veilleId }: { veilleId: string }) {
   const [cards, setCards] = useState<Card[]>([]);
@@ -26,7 +14,9 @@ export function CardList({ veilleId }: { veilleId: string }) {
   async function loadCards() {
     const db = await getDB();
     const all = await db.getAll("cards");
-    setCards(all.filter((c) => c.veilleId === veilleId).sort((a, b) => b.createdAt - a.createdAt));
+    setCards(
+      all.filter(isValidCard).filter((c) => c.veilleId === veilleId).sort((a, b) => b.createdAt - a.createdAt)
+    );
   }
 
   if (cards.length === 0) {

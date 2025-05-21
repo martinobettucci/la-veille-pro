@@ -3,26 +3,7 @@ import { getDB } from "../utils/db";
 import { ScanSourcesButton } from "./scan/ScanSourcesButton";
 import { CardList } from "./scan/CardList";
 import { Globe, Rss, BookOpen, MessageCircle, Plus } from "lucide-react";
-
-type Veille = {
-  id: string;
-  name: string;
-  keywords: string[];
-  sentiments: string[];
-  createdAt: number;
-};
-
-type SourceType = "rss" | "web" | "blog" | "forum" | "manual";
-
-type Source = {
-  id: string;
-  veilleId: string;
-  url: string;
-  type: SourceType;
-  addedAt: number;
-  title?: string;
-  description?: string;
-};
+import { Veille, Source, SourceType, isValidSource } from "../utils/types";
 
 const typeIcons: Record<SourceType, JSX.Element> = {
   rss: <Rss className="w-5 h-5 text-orange-500" />,
@@ -44,7 +25,7 @@ export function VeilleDetail({ veille, onBack }: { veille: Veille; onBack: () =>
   async function loadSources() {
     const db = await getDB();
     const all = await db.getAll("sources");
-    setSources(all.filter((s) => s.veilleId === veille.id));
+    setSources(all.filter(isValidSource).filter((s) => s.veilleId === veille.id));
   }
 
   function handleScanComplete() {
@@ -61,9 +42,15 @@ export function VeilleDetail({ veille, onBack }: { veille: Veille; onBack: () =>
       </button>
       <h2 className="text-2xl font-bold text-slate-800 mb-2">{veille.name}</h2>
       <div className="mb-4 text-slate-600">
-        <span className="font-semibold">Mots-clés :</span> {veille.keywords.join(", ") || <span className="italic">aucun</span>}
+        <span className="font-semibold">Mots-clés :</span>{" "}
+        {veille.keywords.length > 0
+          ? veille.keywords.join(", ")
+          : <span className="italic">aucun</span>}
         <br />
-        <span className="font-semibold">Sentiments :</span> {veille.sentiments.join(", ") || <span className="italic">aucun</span>}
+        <span className="font-semibold">Sentiments :</span>{" "}
+        {veille.sentiments.length > 0
+          ? veille.sentiments.join(", ")
+          : <span className="italic">aucun</span>}
       </div>
       <h3 className="text-lg font-semibold text-blue-700 mb-2">Sources surveillées</h3>
       <ul className="space-y-2 mb-6">
